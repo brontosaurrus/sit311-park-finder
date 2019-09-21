@@ -14,6 +14,8 @@ class App extends React.Component{
 	
 	state = {
 		status : "ALL",
+		parking: [],
+		retrictions: [],
 		events: [],
 		lat: "0",
 		lng: "0",
@@ -49,13 +51,15 @@ class App extends React.Component{
 			.catch(error=> {
 				
 			});
-		
 	}
 	
 	fetchRestriction = ( id ) => {
 		let url= `https://data.melbourne.vic.gov.au/resource/ntht-5rk7.json?$q=${id}`;
 		fetch(url)
 			.then(response => response.json())
+			.then(data => {
+				this.sortRestriction(data)
+			})
 			.catch(error => {
 				
 			});
@@ -63,7 +67,6 @@ class App extends React.Component{
 	
 	fetchWeather = () => {
 		console.log("hello");
-		
 		fetch(`http://api.openweathermap.org/data/2.5/weather?lat=${this.state.lat}&lon=${this.state.lng}&units=metric&appid=${WEATHER_API_KEY}`)
 			.then(response => response.json())
 			.then(data => {
@@ -87,12 +90,25 @@ class App extends React.Component{
 					Latitude: data[index].lat,
 					Longitude: data[index].lon
 				},
-				Status: data[index].status
+				Status: data[index].status,
+				Restrictions: this.fetchRestriction(data[index].bay_id)
 			};
 			arr.push(json);
 		}
 		console.log(arr);
 		this.setState({events: arr})
+	}
+	
+	sortRestriction = ( data ) => {
+		const json = {
+			Bay_ID: data[0].bay_id,
+			IsFree : "Add Function here",
+			Duration : data[0].duration1,
+			effectiveonph : data[0].effectiveonph,
+		    Time : {start: data[0].starttime1, end : data[0].endtime1 },
+		    Days : data[0].today1
+		}
+		return json;
 	}
 	
 	componentDidMount(){
