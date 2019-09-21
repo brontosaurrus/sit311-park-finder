@@ -1,17 +1,20 @@
+//Importing Requirements
 import React from 'react';
 import Map from 'pigeon-maps';
 import Marker from 'pigeon-marker'
 import NewMarker from './NewMarker.js'
 import WeatherInfoComponent from'./WeatherInfoComponent';
+import DashBoard from './DashBoard.js';
 import './App.css';
 
+//Define Global Constants
 const fetch=require("node-fetch");
 const places=require('places.js');
-
 const WEATHER_API_KEY = 'b3a1fe31fb871a134c029733070442ae';
 
 class App extends React.Component{
 	
+	//Set State
 	state = {
 		status : "ALL",
 		parking: [],
@@ -26,13 +29,15 @@ class App extends React.Component{
 		humidity: undefined,
 		pressure: undefined,
 		wind: undefined,
-		cloudiness: undefined
+		cloudiness: undefined,
+		selBayID: undefined,
+		selLocation: undefined,
+		selStatus: undefined,
+		selRestrctions: []
+		
 	}
 	
-	statusChanged = (e) => {
-		this.setState({status:e.target.value},this.fetchParking);
-	}
-	
+	//Fetch Data
 	fetchParking = () => {
 		let url = 'https://data.melbourne.vic.gov.au/resource/vh2v-4nfs.json?';
 		if(this.state.status!=='ALL'){
@@ -81,47 +86,41 @@ class App extends React.Component{
 		)
 	}
 	
+	//Sort Fetch Data
 	sortParking = ( data ) => {
 		var arr =[];
-		for (let index in data) {
+		data.map(index => {
 			const json = {
-				Bay_ID: data[index].bay_id,
+				Bay_ID: index.bay_id,
 				Location: {
-					Latitude: data[index].lat,
-					Longitude: data[index].lon
+					Latitude: index.lat,
+					Longitude: index.lon
 				},
-				Status: data[index].status,
-				Restrictions: this.fetchRestriction(data[index].bay_id)
+				Status: index.status,
+				Restrictions: this.fetchRestriction(index.bay_id)
 			};
 			arr.push(json);
-		}
+		})
 		console.log(arr);
 		this.setState({events: arr})
 	}
 	
 	sortRestriction = ( data ) => {
 		const json = {
-			Bay_ID: data[0].bay_id,
+			Bay_ID: data[0].bayid,
 			IsFree : "Add Function here",
 			Duration : data[0].duration1,
 			effectiveonph : data[0].effectiveonph,
 		    Time : {start: data[0].starttime1, end : data[0].endtime1 },
 		    Days : data[0].today1
 		}
+		console.log(json);
 		return json;
 	}
 	
-	componentDidMount(){
-		this.fetchParking();
-		var placesAutoComplete = places({
-			appId: 'plY0BYIMLL9G',
-			apiKey: 'f14232e9f94d077e60d8007c1b05c5bb',
-			container: document.querySelector('#address'),
-			type: 'address'
-		});
-		placesAutoComplete.on('change', e => {
-			this.setState({lat: e.suggestion.latlng.lat ,lng: e.suggestion.latlng.lng}, this.fetchParking);
-		});
+	//On Change
+	statusChanged = (e) => {
+		this.setState({status:e.target.value},this.fetchParking);
 	}
 	
 	sliderChange(e){
@@ -133,7 +132,7 @@ class App extends React.Component{
 	
 	handleClick = ({event, payload, name, anchor}) => {
 		console.log(`Marker #${JSON.stringify(payload)} clicked at: `, anchor);
-		this.setState({selectedIcon: payload})
+		this.setState({selBayID: payload.Bay_ID, selLocation: payload.Location, selStatus: payload.Status})
 	}
 	
 	handleMouseOver = ({ event, name }) => {
@@ -142,6 +141,20 @@ class App extends React.Component{
 	
 	handleMouseOut = ({ event, name }) => {
 		this.setState({ hover: false })
+	}
+	
+	//Component Did Mount
+	componentDidMount(){
+		this.fetchParking();
+		var placesAutoComplete = places({
+			appId: 'plY0BYIMLL9G',
+			apiKey: 'f14232e9f94d077e60d8007c1b05c5bb',
+			container: document.querySelector('#address'),
+			type: 'address'
+		});
+		placesAutoComplete.on('change', e => {
+			this.setState({lat: e.suggestion.latlng.lat ,lng: e.suggestion.latlng.lng}, this.fetchParking);
+		});
 	}
 	
 	render() {
@@ -169,6 +182,7 @@ class App extends React.Component{
 						pressure={this.state.pressure}
 						wind={this.state.wind}
 						cloudiness={this.state.cloudiness}/>
+					<DashBoard bayid={this.state.selBayID} location={this.state.selLocation} status={this.state.selStatus}/>
 				</div>
 				
 				<header className="App-header">
