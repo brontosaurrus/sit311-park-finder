@@ -34,11 +34,10 @@ class App extends React.Component{
 		selLocation: undefined,
 		selStatus: undefined,
 		selRestrctions: []
-		
 	}
 	
 	//Fetch Data
-	fetchParking = () => {
+	fetchParking =() => {
 		let url = 'https://data.melbourne.vic.gov.au/resource/vh2v-4nfs.json?';
 		if(this.state.status!=='ALL'){
 			url+=`status=${this.state.status}&`
@@ -50,28 +49,34 @@ class App extends React.Component{
 		url+='$limit=10';
 		fetch(url)
 			.then(response => response.json())
-			.then(data => {
-				this.sortParking(data)
+			.then( data => {
+				let arr = this.sortParking(data);
+				console.log(arr);
+				this.setState({parking: arr});
 			})
 			.catch(error=> {
 				
 			});
 	}
 	
-	fetchRestriction = ( id ) => {
-		let url= `https://data.melbourne.vic.gov.au/resource/ntht-5rk7.json?$q=${id}`;
-		fetch(url)
-			.then(response => response.json())
-			.then(data => {
-				this.sortRestriction(data)
-			})
-			.catch(error => {
-				
-			});
+	fetchRestriction = async(b) => {
+		let urls = [];
+		b.map(i => {urls.push(`https://data.melbourne.vic.gov.au/resource/ntht-5rk7.json?$q=${i}`)})
+		Promise.all(urls.map(url => 
+			fetch(url)
+				.then(response => response.json())
+				.catch(error => {
+					
+				})
+		))
+		.then(data => {
+			let arr = this.sortRestriction(data);
+			this.setState({restrictions: arr});
+			this.combineData();
+		});	
 	}
 	
 	fetchWeather = () => {
-		console.log("hello");
 		fetch(`http://api.openweathermap.org/data/2.5/weather?lat=${this.state.lat}&lon=${this.state.lng}&units=metric&appid=${WEATHER_API_KEY}`)
 			.then(response => response.json())
 			.then(data => {
@@ -86,10 +91,38 @@ class App extends React.Component{
 		)
 	}
 	
+	//Combine Data
+	combineData = () => {
+		console.log("Hello")
+		let arr = [];
+		this.state.parking.map(p => {
+			this.state.restrictions.map(r => {
+				if (p.Bay_ID === r.Bay_ID){
+					const json = {
+						Bay_ID: p.Bay_ID,
+						Location: p.Location,
+						Status: p.Status,
+						Restrictions: {
+							IsFree: r.IsFree,
+							Duration: r.Duration,
+							Effectiveonph: r.effectiveonph,
+							Time: r.Time,
+							Days: r.days
+						}
+					};
+					arr.push(json);
+				}
+			});
+		});
+		console.log(arr);
+		this.setState({events: arr});
+	}
+	
 	//Sort Fetch Data
 	sortParking = ( data ) => {
 		var arr =[];
-		data.map(index => {
+		var b = [];
+		data.map( index => {
 			const json = {
 				Bay_ID: index.bay_id,
 				Location: {
@@ -97,30 +130,34 @@ class App extends React.Component{
 					Longitude: index.lon
 				},
 				Status: index.status,
-				Restrictions: this.fetchRestriction(index.bay_id)
 			};
+			b.push(index.bay_id)
 			arr.push(json);
 		})
-		console.log(arr);
-		this.setState({events: arr})
+		this.fetchRestriction(b);
+		return arr;
 	}
 	
 	sortRestriction = ( data ) => {
-		const json = {
-			Bay_ID: data[0].bayid,
-			IsFree : "Add Function here",
-			Duration : data[0].duration1,
-			effectiveonph : data[0].effectiveonph,
-		    Time : {start: data[0].starttime1, end : data[0].endtime1 },
-		    Days : data[0].today1
-		}
-		console.log(json);
-		return json;
+		var arr =[];
+		data.map( index => {
+			const json = {
+				Bay_ID: index[0].bayid,
+				IsFree : "Add Function here",
+				Duration : index[0].duration1,
+				effectiveonph : index[0].effectiveonph,
+				Time : {start: index[0].starttime1, end : index[0].endtime1 },
+				Days : index[0].today1
+			}
+			arr.push(json);
+		})
+		console.log(arr)
+		return arr;
 	}
 	
 	//On Change
 	statusChanged = (e) => {
-		this.setState({status:e.target.value},this.fetchParking);
+		this.setState({status:e.target.value},this.combineData);
 	}
 	
 	sliderChange(e){
