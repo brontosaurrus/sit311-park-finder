@@ -2,10 +2,13 @@ import React from 'react';
 import Map from 'pigeon-maps';
 import Marker from 'pigeon-marker'
 import NewMarker from './NewMarker.js'
+import WeatherInfoComponent from'./WeatherInfoComponent';
 import './App.css';
 
 const fetch=require("node-fetch");
 const places=require('places.js');
+
+const WEATHER_API_KEY = 'b3a1fe31fb871a134c029733070442ae';
 
 class App extends React.Component{
 	
@@ -16,7 +19,12 @@ class App extends React.Component{
 		lng: "0",
 		distance: "500",
 		hover: false,
-		markerName: ""
+		markerName: "",
+		temperature: undefined,
+		humidity: undefined,
+		pressure: undefined,
+		wind: undefined,
+		cloudiness: undefined
 	}
 	
 	statusChanged = (e) => {
@@ -30,6 +38,7 @@ class App extends React.Component{
 		}
 		if(this.state.lat!=='0'){
 			url+=`$where=within_circle(location,${this.state.lat},${this.state.lng},${this.state.distance})&`;
+			this.fetchWeather();
 		}
 		url+='$limit=10';
 		fetch(url)
@@ -40,6 +49,7 @@ class App extends React.Component{
 			.catch(error=> {
 				
 			});
+		
 	}
 	
 	fetchRestriction = ( id ) => {
@@ -49,6 +59,23 @@ class App extends React.Component{
 			.catch(error => {
 				
 			});
+	}
+	
+	fetchWeather = () => {
+		console.log("hello");
+		
+		fetch(`http://api.openweathermap.org/data/2.5/weather?lat=${this.state.lat}&lon=${this.state.lng}&units=metric&appid=${WEATHER_API_KEY}`)
+			.then(response => response.json())
+			.then(data => {
+				this.setState({
+					temperature: data.main.temp,
+					humidity:data.main.humidity,
+					pressure:data.main.pressure,
+					wind:data.wind,
+					cloudiness:data.weather[0].description,
+				})
+			}
+		)
 	}
 	
 	sortParking = ( data ) => {
@@ -78,7 +105,6 @@ class App extends React.Component{
 		});
 		placesAutoComplete.on('change', e => {
 			this.setState({lat: e.suggestion.latlng.lat ,lng: e.suggestion.latlng.lng}, this.fetchParking);
-			console.log(JSON.stringify(e.suggestion.latlng.lat))
 		});
 	}
 	
@@ -118,6 +144,15 @@ class App extends React.Component{
 				<input type="search" id="address" className="form-control" placeholder="Where are we going?" />
 				<div className="slidecontainer">
 					<input type="range" min="1" max="1000" name='distance' value={this.state.distance} className="slider" id="myRange" onChange={(e) => {this.sliderChange(e)}}/>
+				</div>
+				
+				<div className="App-content">
+					<WeatherInfoComponent 
+						temperature={this.state.temperature}
+						humidity={this.state.humidity}
+						pressure={this.state.pressure}
+						wind={this.state.wind}
+						cloudiness={this.state.cloudiness}/>
 				</div>
 				
 				<header className="App-header">
