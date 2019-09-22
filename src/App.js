@@ -15,6 +15,7 @@ const WEATHER_API_KEY = 'b3a1fe31fb871a134c029733070442ae';
 class App extends React.Component{
 	
 	//Set State
+	//
 	state = {
 		status : "ALL",
 		parking: [],
