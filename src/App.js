@@ -31,9 +31,25 @@ class App extends React.Component{
 		wind: undefined,
 		cloudiness: undefined,
 		selBayID: undefined,
-		selLocation: undefined,
-		selStatus: undefined,
-		selRestrctions: []
+		selRestrictions: undefined,
+		selStatus: undefined
+	}
+	
+	//Set Data Types
+	totalOutput() {
+		var Bay_ID = "",
+			Restrictions = [];
+		
+		return {Bay_ID: Bay_ID, Restrictions: Restrictions};
+	}
+	
+	defineRestriction() {
+		var IsFree =  "",
+			Duration = {},
+			Time = {},
+			Days = [];
+		
+		return {IsFree: IsFree, Duration: Duration, Time: Time, Days: Days};
 	}
 	
 	//Fetch Data
@@ -59,8 +75,9 @@ class App extends React.Component{
 			});
 	}
 	
-	fetchRestriction = async(b) => {
+	fetchRestriction = (b) => {
 		let urls = [];
+		var arr;
 		b.map(i => {urls.push(`https://data.melbourne.vic.gov.au/resource/ntht-5rk7.json?$q=${i}`)})
 		Promise.all(urls.map(url => 
 			fetch(url)
@@ -70,10 +87,11 @@ class App extends React.Component{
 				})
 		))
 		.then(data => {
-			let arr = this.sortRestriction(data);
+			arr = data.map(i => this.sortRestriction(i));
+			console.log(arr);
 			this.setState({restrictions: arr});
 			this.combineData();
-		});	
+		})	
 	}
 	
 	fetchWeather = () => {
@@ -91,6 +109,40 @@ class App extends React.Component{
 		)
 	}
 	
+	//Restriction Maniputlation
+	buildrange(start, finish) {
+		var arr1 = [];
+		var arr2 = [];
+		var arr3 = [];
+		if(finish>start){
+			for (var i = start; i<=finish; i++){
+				arr1.push(i);
+			}
+			return arr1;
+		}else if (start===finish){
+			arr2.push(parseFloat(start));
+			return arr2
+		}else{
+			for (var j = 0; j<=6; j++){
+				arr3.push(j);
+			}
+			return arr3;
+		}
+	}
+	
+	descriptionRestriction(des){
+		var res = des.split(" ");
+		if (res[1] === 'MTR'){
+			return 'Meter';
+		}else if (res[1] === 'TKT'){
+			return 'Ticket';
+		}else if (res[1] === 'TOW') {
+			return 'Tow Area';
+		}else{
+			return 'Free';
+		}
+	}
+	
 	//Combine Data
 	combineData = () => {
 		console.log("Hello")
@@ -102,13 +154,7 @@ class App extends React.Component{
 						Bay_ID: p.Bay_ID,
 						Location: p.Location,
 						Status: p.Status,
-						Restrictions: {
-							IsFree: r.IsFree,
-							Duration: r.Duration,
-							Effectiveonph: r.effectiveonph,
-							Time: r.Time,
-							Days: r.days
-						}
+						Restrictions: r.Restrictions
 					};
 					arr.push(json);
 				}
@@ -140,19 +186,28 @@ class App extends React.Component{
 	
 	sortRestriction = ( data ) => {
 		var arr =[];
-		data.map( index => {
-			const json = {
-				Bay_ID: index[0].bayid,
-				IsFree : "Add Function here",
-				Duration : index[0].duration1,
-				effectiveonph : index[0].effectiveonph,
-				Time : {start: index[0].starttime1, end : index[0].endtime1 },
-				Days : index[0].today1
+		var totOut = this.totalOutput();
+		data.map( obj => {		
+		console.log(obj);
+			var restarr = [];
+			var i = 0;
+			for (var key in obj){
+				if (key.startsWith('descrip')){
+					i+=1
+				}
 			}
-			arr.push(json);
+			for (var a = 1; a<=i; a++){
+				var defRes = this.defineRestriction();
+				defRes.IsFree = this.descriptionRestriction(obj['description'+a]);
+				defRes.Duration = {'normal':obj['duration'+a], 'disability':obj['disabilityext'+a]};
+				defRes.Time = {'start':obj['starttime'+a], 'end':obj['endtime'+a]};
+				defRes.Days = this.buildrange(obj['fromday'+a],obj['today'+a]);
+				restarr.push(defRes);
+			}
+			totOut.Bay_ID = obj['bayid'];
+			totOut.Restrictions = restarr;
 		})
-		console.log(arr)
-		return arr;
+		return totOut;
 	}
 	
 	//On Change
@@ -167,9 +222,10 @@ class App extends React.Component{
 		this.setState(obj);
 	}
 	
-	handleClick = ({event, payload, name, anchor}) => {
-		console.log(`Marker #${JSON.stringify(payload)} clicked at: `, anchor);
-		this.setState({selBayID: payload.Bay_ID, selLocation: payload.Location, selStatus: payload.Status})
+	handleClick = async({event, payload, name, anchor}) => {
+		await console.log(payload.Restrictions);
+		await this.setState({selBayID: payload.Bay_ID, selRestrictions: payload.Restrictions, selStatus: payload.Status})
+		await console.log(this.state.selRestrictions);
 	}
 	
 	handleMouseOver = ({ event, name }) => {
@@ -219,7 +275,7 @@ class App extends React.Component{
 						pressure={this.state.pressure}
 						wind={this.state.wind}
 						cloudiness={this.state.cloudiness}/>
-					<DashBoard bayid={this.state.selBayID} location={this.state.selLocation} status={this.state.selStatus}/>
+					<DashBoard bayid={this.state.selBayID} restriction={this.state.selRestrictions} status={this.state.selStatus}/>
 				</div>
 				
 				<header className="App-header">
