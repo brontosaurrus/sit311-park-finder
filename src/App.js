@@ -7,8 +7,10 @@ import WeatherInfoComponent from'./WeatherInfoComponent';
 import DashBoard from './DashBoard.js';
 import './App.css';
 
+//Importing Parking IOT CORE Devices
+
 //Define Global Constants
-const fetch=require("node-fetch");
+const fetch=require('node-fetch');
 const places=require('places.js');
 const WEATHER_API_KEY = 'b3a1fe31fb871a134c029733070442ae';
 
@@ -251,6 +253,20 @@ class App extends React.Component{
 		});
 	}
 	
+	//Send Post Request
+	sendBayMessage = async () => {
+		const rawResponse = await fetch('http://localhost:3005/start', {
+			method: 'POST',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(this.state.events)
+		});
+		const content = await rawResponse.json();
+		console.log(content);
+	}
+	
 	render() {
 		const status = ['ALL', 'Present', 'Unoccupied', ]
 		
@@ -277,6 +293,7 @@ class App extends React.Component{
 						wind={this.state.wind}
 						cloudiness={this.state.cloudiness}/>
 					<DashBoard bayid={this.state.selBayID} restriction={this.state.selRestrictions} status={this.state.selStatus}/>
+					<input type="button" onClick={this.sendBayMessage} value={'sendBayMessage'}/>
 				</div>
 				
 				<header className="App-header">
