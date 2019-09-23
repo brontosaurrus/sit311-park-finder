@@ -1,4 +1,5 @@
 //Importing Requirements
+
 import React from 'react';
 import Map from 'pigeon-maps';
 import Marker from 'pigeon-marker'
@@ -8,6 +9,7 @@ import DashBoard from './DashBoard.js';
 import './App.css';
 
 //Importing Parking IOT CORE Devices
+
 
 //Define Global Constants
 const fetch=require('node-fetch');
@@ -35,7 +37,8 @@ class App extends React.Component{
 		cloudiness: undefined,
 		selBayID: undefined,
 		selRestrictions: undefined,
-		selStatus: undefined
+		selStatus: undefined,
+		bayMessages: []
 	}
 	
 	//Set Data Types
@@ -215,7 +218,7 @@ class App extends React.Component{
 	
 	//On Change
 	statusChanged = (e) => {
-		this.setState({status:e.target.value},this.combineData);
+		this.setState({status:e.target.value},this.fetchParking);
 	}
 	
 	sliderChange(e){
