@@ -6,6 +6,10 @@ import NewMarker from './NewMarker.js'
 import WeatherInfoComponent from'./WeatherInfoComponent';
 import DashBoard from './DashBoard.js';
 import './App.css';
+import Button from '@material-ui/core/Button';
+import Select from '@material-ui/core/Select';
+
+
 
 const fetch=require('node-fetch');
 const places=require('places.js');
@@ -239,7 +243,7 @@ class App extends React.Component{
 		this.setState({status:e.target.value},this.fetchParking);
 	}
 	
-	//Hanges the distance radius for the search instead of using the fixed 500m
+	//Changes the distance radius for the search instead of using the fixed 500m
 	sliderChange(e){
 		let obj = {};
 		obj[e.target.name] = e.target.value;
@@ -301,7 +305,7 @@ class App extends React.Component{
 	render() {
 		
 		//Status array for slecting parking type
-		const status = ['ALL', 'Present', 'Unoccupied', ]
+		const status = ['All', 'Present', 'Unoccupied', ]
 		
 		//Stye for onHover Tooltip
 		const tooltipStyle = {
@@ -311,12 +315,14 @@ class App extends React.Component{
 			borderStyle: "solid",
 			background: "white"
 		}
+
 		
 		return (
 			<div className="App">
 				<input type="search" id="address" className="form-control" placeholder="Where are we going?" />
+				
 				<div className="slidecontainer">
-					<input type="range" min="1" max="1000" name='distance' value={this.state.distance} className="slider" id="myRange" onChange={(e) => {this.sliderChange(e)}}/>
+					<input type="range" min="1" max="500" name='distance' value={this.state.distance} className="slider" id="myRange" onChange={(e) => {this.sliderChange(e)}}/>
 				</div>
 				
 				<div className="App-content">
@@ -327,11 +333,20 @@ class App extends React.Component{
 						wind={this.state.wind}
 						cloudiness={this.state.cloudiness}/>
 					<DashBoard bayid={this.state.selBayID} restriction={this.state.selRestrictions} status={this.state.selStatus}/>
-					<input type="button" onClick={this.sendBayMessage} value={'Start Bay Monitoring'}/>
+					
+					<Button onClick={this.sendBayMessage} size = "small" color="primary"> 
+					   Send Bay Message
+					 </Button>
+                
+					
+					<Select onChange={this.statusChanged} value={this.state.status}>
+						{status.map(i=>(<option key={i} value={i}>{i}</option>))}
+					</Select>
+				    
 				</div>
 				
 				<header className="App-header">
-					<Map center={[-37.8470585,145.1145445]} zoom={12} width={600} height={400} >
+					<Map center={[-37.8470585,145.1145445]} zoom={12} width={1900} height={1000} >
 						<Marker anchor={[-37.8470585,145.1145445]} payload={1} onClick={this.handleClick} />
 						{this.state.events.map(i=> (<NewMarker anchor={[parseFloat(i.Location.Latitude),parseFloat(i.Location.Longitude)]} status={i.Status} key={i.Bay_ID} name={i.Bay_ID} payload={i} onClick={this.handleClick} onMouseOver={this.handleMouseOver} onMouseOut={this.handleMouseOut}/>))}
 						<div>
@@ -339,14 +354,13 @@ class App extends React.Component{
 						</div>
 					</Map>
 					
-					<label>Status</label>
-					<select onChange={this.statusChanged} value={this.state.status}>
-						{status.map(i=>(<option key={i} value={i}>{i}</option>))}
-					</select>
+					
+					
 				</header>
 			</div>
-		)
+		);
 	}
 }
-
+  
 export default App;
+
