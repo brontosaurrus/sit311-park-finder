@@ -30,7 +30,7 @@ The autocomplete search bar is powered by [Algolia Places](https://community.alg
 
 ### `React`
 
-Go to the relevant folder and run **npm start**
+Go to the main folder and run **npm start**
 
 ### `AWS IOT Devices`
 
