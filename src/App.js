@@ -327,7 +327,7 @@ class App extends React.Component{
 						wind={this.state.wind}
 						cloudiness={this.state.cloudiness}/>
 					<DashBoard bayid={this.state.selBayID} restriction={this.state.selRestrictions} status={this.state.selStatus}/>
-					<input type="button" onClick={this.sendBayMessage} value={'sendBayMessage'}/>
+					<input type="button" onClick={this.sendBayMessage} value={'Start Bay Monitoring'}/>
 				</div>
 				
 				<header className="App-header">
