@@ -8,15 +8,15 @@ As such the user has the ability to search for specific locations and be present
 
 ## API's Used
 
-###`Map`
+### `Map`
 
 The map is generated through [pigeon-maps] (https://github.com/mariusandra/pigeon-maps).  This allows the user to see where parking bays are located.
 
-###`Weather`
+### `Weather`
 
 The weather api associated with this project uses [OpenWeather] (https://openweathermap.org/). This allows the user to find what the expected weather is at their desired location.  This helps in understanding if they should seek shelter or not based on these events.
 
-###`Parking Bay`
+### `Parking Bay`
 
 The parking information requires information from two locations provided by City of Melbourne.  This includes the [On Street Parking Sensors] (https://data.melbourne.vic.gov.au/Transport-Movement/On-street-Parking-Bay-Sensors/vh2v-4nfs) used to see if a parking space is available and the [On Street Parking Restrictions] (https://data.melbourne.vic.gov.au/Transport-Movement/On-street-Car-Park-Bay-Restrictions/ntht-5rk7) to see what restrictions are associated with the parking.
 
